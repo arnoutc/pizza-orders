@@ -39,7 +39,7 @@ resource "aws_s3_object" "object" {
 resource "aws_s3_bucket_acl" "bucket" {
   bucket = aws_s3_bucket.bucket.id
   
-  acl = "private"
+  acl = "public-read"
 }
 
 resource "aws_s3_bucket_public_access_block" "app" {
@@ -93,3 +93,12 @@ resource "aws_s3_bucket_policy" "public_read_write_access" {
   POLICY
 }
 
+resource "aws_s3_bucket_website_configuration" "website-config" {
+  bucket = aws_s3_bucket.bucket.id
+index_document {
+    suffix = "goPizza.html"
+  }
+error_document {
+    key = "404.html"
+  }
+}

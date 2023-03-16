@@ -7,7 +7,7 @@ variable "region" {
 variable "bucket_prefix" {
   type = string
   description = "The prefix to use for the s3 bucket name"
-  default = "pacator-gopizza-lambda-functions20230312204508726600000001"
+  default = "pacator-gopizza-lambda-functions20230315153525618700000001"
 }
 
 variable "bucket_key" {

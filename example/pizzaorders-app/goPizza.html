@@ -1,0 +1,288 @@
+<!doctype html>
+<html>
+
+<head>
+
+    <title>goPizza</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="lib/axios/dist/axios.standalone.js"></script>
+    <script type="text/javascript" src="lib/CryptoJS/rollups/hmac-sha256.js"></script>
+    <script type="text/javascript" src="lib/CryptoJS/rollups/sha256.js"></script>
+    <script type="text/javascript" src="lib/CryptoJS/components/hmac.js"></script>
+    <script type="text/javascript" src="lib/CryptoJS/components/enc-base64.js"></script>
+    <script type="text/javascript" src="lib/url-template/url-template.js"></script>
+    <script type="text/javascript" src="lib/apiGatewayCore/sigV4Client.js"></script>
+    <script type="text/javascript" src="lib/apiGatewayCore/apiGatewayClient.js"></script>
+    <script type="text/javascript" src="lib/apiGatewayCore/simpleHttpClient.js"></script>
+    <script type="text/javascript" src="lib/apiGatewayCore/utils.js"></script>
+    <script type="text/javascript" src="apigClient.js"></script>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+
+
+</head>
+
+<body>
+    <div class="jumbotron text-center">
+        <img src="lib/pizza.png" alt="Pizza" style="width:304px;height:228px;">
+        <hr />
+        <div class="container">
+            <div class="row">
+                <h3 style="text-align: center;">Menu</h3>
+
+                <form name="Order">
+                    <p><input name="Pizza" type="radio" />Pizza - $10&nbsp; &nbsp; &nbsp;
+                        <input name="BreadSticks" type="radio" />BreadSticks -$4</p>
+
+                    <p><input name="Salad" type="radio" />Salad - $4&nbsp; &nbsp; &nbsp;
+                        <input name="Drink" type="radio" />Drink - $2</p>
+
+                    <br>
+            </div>
+            <div class="row">
+                <h3 style="text-align: center;">Select Pickup or Delivery.....</h3>
+
+                <p><input name="PickupOrDeliverySelection" type="radio" value="Pickup" />Pickup &nbsp; &nbsp; &nbsp; &nbsp;
+                    &nbsp; &nbsp;
+                    <input name="PickupOrDeliverySelection" type="radio" value="Delivery" />Delivery
+                </p>
+
+
+                <br>
+            </div>
+            <div class="row">
+                <h3 style="text-align: center;">Select Payment Type.....</h3>
+
+                <input name="PaymentTypeSelection" type="radio" value="CreditCard" />Credit Card &nbsp; &nbsp; &nbsp; &nbsp;
+                &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<input name="PaymentTypeSelection"
+                    type="radio" value="PayPal" />PayPal
+            </div>
+            <div class="row">
+                <div name="PaymentDetailsCC" style="display:none">
+                    <p>Name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input name="CreditCardName" type="text" /> Card Number&nbsp;&nbsp;
+                        <input name="CreditCardNumber" type="text" /></p>
+                    <p>Zip Code&nbsp;<input name="ZipCode" type="text" /> Security Code&nbsp;<input name="SecurityCode" type="text"
+                        /></p>
+
+                </div>
+            </div>
+
+
+            <p>&nbsp;</p>
+
+            <div class="row">
+                <p style="text-align: center;"><input type="submit" value="Order Online" /></h1>
+                    <center>
+                        <div id="results" name="results"></div>
+                    </center>
+                </p>
+
+            </div>
+
+            </form>
+
+        </div>
+        </container>
+</body>
+
+</html>
+
+<script type="text/javascript">
+    var outputMessage;
+    var status;
+    var orderStatusText;
+
+
+    $(document).ready(function () {
+
+
+        //show/hide Payment Details
+        $('input[value=CreditCard]').change(function () {
+            $('div[name=PaymentDetailsCC]').show();
+        });
+
+        $('input[value=PayPal]').change(function () {
+
+            $('div[name=PaymentDetailsCC]').hide();
+        });
+
+
+        var apigClient = apigClientFactory.newClient();
+        $('form').submit(function (event) {
+            //get the form data
+
+            var orderId = Math.floor((Math.random() * 10) + 1);
+            var customerId = "cus_" + orderId;
+            var orderType = $('input[name=PickupOrDeliverySelection]:checked').val();
+
+            var order = [
+                orderItem1 = {
+                    'item': ($('input[name=Pizza]:checked').val() === 'on') ? 'Pizza' : ' ',
+                    'price': '10'
+                },
+                orderItem2 = {
+                    'item': ($('input[name=BreadSticks]:checked').val() === 'on') ? 'BreadSticks' : ' ',
+                    'price': '4'
+                },
+                orderItem3 = {
+                    'item': ($('input[name=Salad]:checked').val() === 'on') ? 'Salad' : ' ',
+                    'price': '4'
+                },
+                orderItem4 = {
+                    'item': ($('input[name=Drink]:checked').val() === 'on') ? 'Drink' : ' ',
+                    'price': '2'
+                }
+            ]
+
+            var orderTotal = getOrderTotal(order);
+
+            function getOrderTotal(order) {
+                var total = 0;
+                for (var i = 0; i < order.length; i++) {
+                    var obj = order[i];
+                    if (obj.item != ' ') {
+                        total = total + parseFloat(obj.price);
+                    }
+                }
+                return total;
+            };
+
+            //var paymentType = ($('input[name=PaymentTypeSelection]:checked').val() === 'on') ? 'CreditCard' : 'PayPal';
+            var paymentType = $('input[name=PaymentTypeSelection]:checked').val();
+            var cardNumber = $('input[name=CreditCardNumber]').val();
+            var cardName = $('input[name=CreditCardName]').val();
+            var securityCode = $('input[name=SecurityCode]').val();
+            var zipCode = $('input[name=ZipCode]').val();
+
+
+
+               console.log("orderid= " + orderId);
+               console.log("customerId = " + customerId);
+               console.log("orderType = " + orderType);
+               console.log("order = " + JSON.stringify(order));
+               console.log("payment Type =" + paymentType);
+               console.log("card number=" + cardNumber);
+               console.log("card name =" + cardName);
+               console.log("security code= " + securityCode);
+               console.log("zipcode= " + zipCode);
+               console.log("order total = " + orderTotal);
+
+
+
+            var params = {
+                //This is where any header, path, or querystring request params go. The key is the parameter named as defined in the API
+                param0: '',
+                param1: ''
+            };
+
+
+            var reqBody = {
+                'input': {
+                    'orderid': orderId,
+                    customerid: customerId,
+                    ordertype: orderType,
+                    ordertotal: orderTotal,
+                    orderitem1: order[0].item,
+                    orderitem2: order[1].item,
+                    orderitem3: order[2].item,
+                    orderitem4: order[3].item,
+                    paymenttype: paymentType,
+                    cardnumber: cardNumber,
+                    cardname: cardName,
+                    zipcode: zipCode,
+                    securitycode: securityCode
+                },
+                'name': 'WebExec_' + orderId + "_" + Date.now(),
+                'stateMachineArn': 'arn:aws:states:eu-west-2:009831754594:stateMachine:pizza-orders-step-function'
+
+            };
+
+            var q = '"';
+            var inputString = JSON.stringify(reqBody.input).replace(/q/g, '\\\"');
+            console.log("inputString = " + inputString);
+            reqBody.input = inputString;
+            console.log("Request Body = " + JSON.stringify(reqBody));
+
+            var body = reqBody;
+
+            var additionalParams = {
+                //If there are any unmodeled query parameters or headers that need to be sent with the request you can add them here
+                headers: {
+
+                },
+                queryParams: {
+
+                }
+            };
+
+            // post request
+            apigClient.rootPost(params, body, additionalParams).then(function (postResult) {
+                console.log("post result = " + JSON.stringify(postResult.data));
+                console.log("execeutionArn = " + postResult.data.executionArn);
+
+                var getParams = {
+                    'executionarn': postResult.data.executionArn
+                };
+
+
+                var getBody = {};
+
+                var getAdditionalParams = {
+                    //If there are any unmodeled query parameters or headers that need to be sent with the request you can add them here
+                    headers: {
+
+                    },
+                    queryParams: {
+                        'executionarn': postResult.data.executionArn
+                    }
+                };
+
+
+
+                //need to sleep for sometime for state machine to finish running
+                function sleep(time) {
+                    return new Promise((resolve) => setTimeout(resolve, time));
+                }
+
+
+                sleep(10000).then(() => {
+                    apigClient.rootGet(getParams, getBody, getAdditionalParams).then(function (getResult) {
+                        console.log("get result : " + JSON.stringify(getResult.data));
+
+                        outputMessage = getResult.data.output;
+                        console.log("outputMessage = " + outputMessage);
+                        status = getResult.data.status;
+
+                        if (status === 'SUCCEEDED') {
+                            orderStatusText = JSON.parse(outputMessage).orderstatusText;
+                            console.log("orderstatusText = " + orderStatusText);
+                            $('#results').html(orderStatusText);
+                            var audio = new Audio('orderstatus.mp3');
+                            audio.play();
+
+                        }
+
+
+                    }).catch(function (getResult) {
+                        console.log("get error");
+                    });
+
+                })
+
+
+            }).catch(function (postResult) {
+                console.log("post error");
+            });
+
+
+            return false;
+
+        });
+
+    });
+
+</script>
