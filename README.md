@@ -85,7 +85,9 @@ Apply web hosting to the s3 bucket in Terraform configuration
 
 #### Polly voice
 
+In the file storage/s3/LambdaFunctions/NotifyWithPolly.js add the s3 bucket URL, zip the file and upload the LambdaFunctions.zip manually to s3
 
+var uploadParams = { Bucket: "pacator-gopizza-lambda-functions20230315153525618700000001"
 
 
 
