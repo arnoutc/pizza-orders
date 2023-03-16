@@ -81,6 +81,10 @@ Update in the goPizza.html the state machine arn in line 200 to your state machi
 
 Manually upload the examples/pizzaorders-app lib folder and goPizza.html, apigClientjs to the S3 bucket created earlier.
 
+Apply web hosting to the s3 bucket in Terraform configuration
+
+#### Polly voice
+
 
 
 
