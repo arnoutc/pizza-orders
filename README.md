@@ -89,6 +89,35 @@ In the file storage/s3/LambdaFunctions/NotifyWithPolly.js add the s3 bucket URL,
 
 var uploadParams = { Bucket: "pacator-gopizza-lambda-functions20230315153525618700000001"
 
+## Test
+
+In order to test the step function in the AWS console you can add a sample:
+
+{
+    "orderid": 9,
+    "customerid": "cus_9",
+    "ordertype": "Pickup",
+    "ordertotal": 14,
+    "orderitem1": "Pizza",
+    "orderitem2": "Garlic Dough balls",
+    "orderitem3": "Tuna Salad",
+    "orderitem4": "Vino rosso",
+    "paymenttype": "CreditCard",
+    "cardnumber": "1111111111111111",
+    "cardname": "Tina Fey",
+    "zipcode": "678",
+    "securitycode": "123"
+}
+
+To test API Gateway POST to state machine:
+
+{
+  "input": "{\"orderid\": \"19\",\"customerid\": \"12\",\"ordertype\": \"pickup\",\"ordertotal\": \"15.75\",\"orderitem1\": \"pizza\",\"orderitem2\": \" \",\"paymenttype\": \"creditcard\",\"cardnumber\": \"1111111111111111\",\"cardname\": \"Tina Fey\",\"zipcode\": \"678\",\"securitycode\": \"123\"}",
+   "name": "MyExec-2-31",
+   "stateMachineArn": "arn:aws:states:eu-west-2:009831754594:stateMachine:pizza-orders-step-function"
+}
+
+
 
 
 
